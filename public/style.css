@@ -1,0 +1,36 @@
+﻿body{
+	font-family: "Century Gothic";
+}
+
+table {
+  border-collapse: collapse;
+  /* width: 100%; */
+}
+td, th {
+	border: 1px solid #dddddd;
+  text-align: left;
+  padding: 5px;
+}
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+
+#langas{
+	width: 647px;
+	height: 400px;
+}
+#wi_info{
+	padding-left: 5em;
+}
+#col_w{ background-color: #ffffff; }
+#col_r{ background-color: #ff0000; }
+#col_g{ background-color: #00ff00; }
+#col_b{ background-color: #0000ff; }
+#col_bl{ background-color: #000000; }
+.fu{
+	float: left;
+}
+
+.sfel ul{
+	display: inline-block;
+}
