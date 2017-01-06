@@ -2,8 +2,51 @@
 <html>
   <head>
     <meta charset="utf-8"></meta>
-  </head>
-  <body>
-    <p>Hello World<p>
-  </body>
+    <title>File Uploading Form</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+   </head>
+
+   <body>
+     <h3>File Upload:</h3>
+     <div class = "fu">
+       Select a file to upload: <br />
+       <input id="fileId" type = "file" name = "file" />
+       <br />
+       <input id="uplId" type = "button" value = "Upload File" />
+       <br />
+       <span id="up_info">info</span>
+     </div>
+     <div class = "sfel">
+       Support file extension list: <br />
+       <ul>
+         <li>obj</li>
+         <li>stl</li>
+       </ul>
+     </div>
+     <h3>File download:</h3>
+     <table id="tab">
+       <tr>
+        <th>#</th>
+        <th>Original name</th>
+        <th>Size</th>
+        <th>Blob link</th>
+        <th>Download</th>
+        <th>View</th>
+      </tr>
+     </table>
+     <h3>File 3D view:</h3>
+     <label><input type="checkbox" id="anvId">Auto news view</label>
+     <span id="wi_info">info</span>
+     <div id="langas"></div>
+     <button id="col_w"></button>
+     <button id="col_r"></button>
+     <button id="col_g"></button>
+     <button id="col_b"></button>
+     <button id="col_bl"></button>
+
+     <script src="lib/three.js"></script>
+     <!--<script src="lib/three.min.js"></script>-->
+ 	   <script src="lib/OrbitControls.js"></script>
+     <script src="script.js"></script>
+   </body>
 </html>
