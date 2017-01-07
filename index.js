@@ -16,7 +16,7 @@ var opts = {
   fileFilter: fileFilterF,
   limits: {
     fields: 0,
-    fileSize: 104857600, //100MB ROM
+    fileSize: 31457280, //30MB Disc
     files: 1,
     parts: 1
   }
@@ -25,6 +25,7 @@ var opts = {
 var upload = multer(opts).single("file");
 
 app.post('/file_upload', function (req, res) {
+  console.log("Response START");
   upload(req, res, function (err){
     if(err){
       var response = { msg: "", code: "" };
@@ -53,6 +54,8 @@ app.post('/file_upload', function (req, res) {
     }
 
     fs.readFile(req.file.path, function(err, data) {
+      fs.unlink(req.file.path);
+
       if(err){
         console.log("File reading SYSTEM ERROR",err);
         var response = {
@@ -77,8 +80,6 @@ app.post('/file_upload', function (req, res) {
           }
         });
       }
-
-      fs.unlink(req.file.path);
     });
   });
 });

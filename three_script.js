@@ -49,9 +49,7 @@ function getThreeObjectRedy( object ) {
   var geoArr;
 
   //set object scale
-  console.log(object.position);
   object = convertObject( object );
-  console.log(object.position);
 
   var singleGeometry = new THREE.Geometry();
   object.traverse( function ( child ) {
@@ -61,7 +59,6 @@ function getThreeObjectRedy( object ) {
   		}else if(child.geometry.type == "BufferGeometry"){
   			var geometry = new THREE.Geometry().fromBufferGeometry( child.geometry );
   		}else{
-  			console.log("!!! Use oter geo: " + child.geometry.type);
   			return;
   		}
   		singleGeometry.merge( geometry );
