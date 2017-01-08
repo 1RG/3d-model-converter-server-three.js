@@ -2,6 +2,7 @@ var THREE = require('./lib/three');
 var fs = require('fs');
 eval(fs.readFileSync("lib/OBJLoader.js")+"");					//Original
 eval(fs.readFileSync("lib/STLLoader.js")+"");					//Original
+eval(fs.readFileSync("lib/PLYLoader.js")+"");					//Original
 eval(fs.readFileSync("lib/Custom_XHRLoader.js")+"");
 
 module.exports = {
@@ -23,6 +24,10 @@ function loadThreejsObject(ext, data, method){
       var loader = new THREE.OBJLoader();
       load(loader, data);
       break;
+		case "ply":
+			var loader = new THREE.PLYLoader();
+			load_geo(loader, data);
+			break;
     case "stl":
       var loader = new THREE.STLLoader();
   		load_geo(loader, data);
