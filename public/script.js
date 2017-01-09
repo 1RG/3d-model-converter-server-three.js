@@ -246,12 +246,42 @@ function buttonControl() {
     autoView = _("anvId").checked;
   });
 
+  if(document.mozFullScreenEnabled){
+    document.addEventListener("mozfullscreenchange", onWindowResize);
+  } else if(document.webkitFullscreenEnabled) {
+    document.addEventListener("webkitfullscreenchange", onWindowResize);
+  } else if(document.msFullscreenEnabled) {
+    document.addEventListener("MSFullscreenChange", onWindowResize);
+  } else if(document.fullscreenEnabled) {
+    document.addEventListener("fullscreenchange", onWindowResize);
+  }
+
+  _("fScreen").addEventListener("click", function(){
+    var elem = langasId;
+    if (elem.mozRequestFullScreen) {
+      elem.mozRequestFullScreen();
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+      elem.msRequestFullscreen();
+    } else if (elem.requestFullscreen) {
+      elem.requestFullscreen();
+    }
+  });
+
   function setColor(h) {
     if(object != null){
       object.material.color.setHex(h);
       render();
     }
   }
+}
+
+function onWindowResize() {
+	camera.aspect = langasId.clientWidth / langasId.clientHeight;
+	camera.updateProjectionMatrix();
+	renderer.setSize( langasId.clientWidth, langasId.clientHeight );
+	render();
 }
 
 function render() {
