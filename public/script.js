@@ -251,7 +251,16 @@ function buttonControl() {
   } else if(document.webkitFullscreenEnabled) {
     document.addEventListener("webkitfullscreenchange", onWindowResize);
   } else if(document.msFullscreenEnabled) {
-    document.addEventListener("MSFullscreenChange", onWindowResize);
+    document.addEventListener("MSFullscreenChange", function(){
+      var i = 0;
+      var loop = setInterval(function(){
+        if( i > 10 || (window.screen.width == langasId.clientWidth && window.screen.height == langasId.clientHeight) ){
+          clearInterval(loop);
+          onWindowResize();
+        }
+        i++;
+      }, 100);
+    });
   } else if(document.fullscreenEnabled) {
     document.addEventListener("fullscreenchange", onWindowResize);
   }

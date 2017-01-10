@@ -19,6 +19,11 @@ tr:nth-child(even) {
 	width: 647px;
 	height: 400px;
 }
+#langas:-moz-full-screen { width: 100%; height: 100%; }
+#langas:-webkit-full-screen { width: 100%; height: 100%; }
+#langas:-ms-fullscreen { width: 100%; height: 100%; }
+#langas:fullscreen { width: 100%; height: 100%; }
+
 #wi_info{
 	padding-left: 5em;
 }
