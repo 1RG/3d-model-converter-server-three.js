@@ -1,7 +1,13 @@
 var THREE = require('./lib/three');
 var fs = require('fs');
+var DOMParser = require('xmldom').DOMParser;
+var JSZip = require('./lib/jszip.min');
+var TextDecoder = true;
 eval(fs.readFileSync("lib/OBJLoader.js")+"");					//Original
 eval(fs.readFileSync("lib/STLLoader.js")+"");					//Original
+eval(fs.readFileSync("lib/3MFLoader.js")+"");					//Custom
+eval(fs.readFileSync("lib/AMFLoader.js")+"");					//Custom
+eval(fs.readFileSync("lib/AWDLoader.js")+"");					//Custom
 eval(fs.readFileSync("lib/PLYLoader.js")+"");					//Original
 eval(fs.readFileSync("lib/Custom_XHRLoader.js")+"");
 
@@ -20,6 +26,18 @@ function read(ext, data, serverREnd) {
 
 function loadThreejsObject(ext, data, method){
   switch (ext) {
+		case "3mf":
+			var loader = new THREE.ThreeMFLoader();
+			load(loader, data);
+			break;
+		case "amf":
+			var loader = new THREE.AMFLoader();
+			load(loader, data);
+			break;
+		case "awd":
+			var loader = new THREE.AWDLoader();
+			load(loader, data);
+			break;
     case "obj":
       var loader = new THREE.OBJLoader();
       load(loader, data);
@@ -117,4 +135,50 @@ function getThreeObjectRedy( object ) {
 
   	return obj;
   }
+}
+
+// FIXME: Code location
+global.getStringFromAB = function(arrayBuffer){
+//	String.fromCharCode.apply(null, new Uint8Array(arrayBuffer));
+	var u8a = new Uint8Array(arrayBuffer);
+	var r = "";
+	for (var i = 0; i < u8a.length; i++) {
+		r += String.fromCharCode(u8a[i]);
+	}
+	return r;
+}
+
+// FIXME: Code location
+global.getDocumentElementChildren = function(documentElement){
+	var c = [];
+	var cn = documentElement.childNodes;
+	for (var i = 0; i < cn.length; i++) {
+		if(cn[i].nodeType == 1){
+			c.push(cn[i]);
+		}
+	}
+	return c;
+}
+
+// FIXME: Code location
+global.getFirstElementChild = function(node) {
+ var r = null;
+
+ var c = [];
+ var cn = node.childNodes;
+ for (var i = 0; i < cn.length; i++) {
+	 if(cn[i].nodeType == 1){
+		 c.push(cn[i]);
+	 }
+ }
+
+ var temp = c[0];
+ r = temp;
+
+ for (var i = 1; i < c.length; i++) {
+	 temp["nextElementSibling"] = c[i];
+	 temp = temp.nextElementSibling;
+ }
+
+ return r;
 }

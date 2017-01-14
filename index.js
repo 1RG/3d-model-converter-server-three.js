@@ -5,7 +5,7 @@ var fs = require("fs");
 var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080;
 var ip   = process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0';
 
-var suppFileE = ["stl", "obj", "ply"];
+var suppFileE = ["3mf", "amf", "awd", "stl", "obj", "ply"];
 
 var multer  = require('multer');
 

@@ -21,6 +21,7 @@
   "homepage": "https://github.com/1RG/3d-model-converter-server-three.js#readme",
   "dependencies": {
     "express": "^4.14.0",
-    "multer": "^1.2.1"
+    "multer": "^1.2.1",
+    "xmldom": "^0.1.27"
   }
 }
