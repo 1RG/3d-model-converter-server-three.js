@@ -1,15 +1,51 @@
 ﻿var scene, camera, renderer;
 var object, material;
 var autoView = false;
+var webgl_supp;
 
 var langasId = _( "langas" );
 var objectMetadata = [];
 
+var canvasLibURLArr = [
+	"lib/CanvasRenderer.js",
+	"lib/Projector.js"
+];
+
 main()
-viewInit();
+webgl_supp = true;
+if ( !Detector.webgl ){
+  webgl_supp = false;
+  loadLibrary( canvasLibURLArr, function() {
+    viewInit();
+  });
+}else{
+  viewInit();
+}
 
 function _(el){
   return document.getElementById(el);
+}
+
+function loadLibrary(arr, doneMethod){
+	var arrNr = 0;
+	if( arr.length != 0 ){
+		sendAllRequest(arr[0]);
+	}else{
+		doneMethod();
+	}
+	function sendAllRequest( url ){
+		arrNr++;
+		var script = document.createElement('script');
+		script.onload = function(){
+			if(arrNr != arr.length){
+				sendAllRequest(arr[arrNr]);
+			}else{
+				doneMethod();
+			}
+		}
+		script.src = url;
+		document.body.appendChild(script);
+	}
 }
 
 function main(){
@@ -122,37 +158,59 @@ function viewInit() {
 	camera.position.z = 500;
 	camera.lookAt( scene.position );
 
-  material = new THREE.MeshPhongMaterial({
+  var materialPro = {
     color: 0x00a100,
     side: THREE.DoubleSide,
     shading: THREE.FlatShading
-  });
+  }
+  if(webgl_supp){
+    material = new THREE.MeshPhongMaterial(materialPro);
+  }else{
+    material = new THREE.MeshLambertMaterial(materialPro);
+  }
 
 	//Plane
-	var planeGeometry = new THREE.PlaneGeometry(2000, 2000);
-	var planeMaterial = new THREE.MeshPhongMaterial({
-		color: 0xdcdcdc,
-		shininess: 10
-	});
-	var plane = new THREE.Mesh(planeGeometry, planeMaterial);
-	plane.rotation.x = - Math.PI / 2;
-	plane.receiveShadow = true;
-	scene.add(plane);
+  if(!webgl_supp){
+    var size = 1000, step = 100;
+  	var pGeometry = new THREE.Geometry();
+  	for ( var i = - size; i <= size; i += step ) {
+  		pGeometry.vertices.push( new THREE.Vector3( - size, 0, i ) );
+  		pGeometry.vertices.push( new THREE.Vector3(   size, 0, i ) );
+  		pGeometry.vertices.push( new THREE.Vector3( i, 0, - size ) );
+  		pGeometry.vertices.push( new THREE.Vector3( i, 0,   size ) );
+  	}
+  	var pMaterial = new THREE.LineBasicMaterial( { color: 0xffffff, opacity: 0.5 } );
+  	var pLine = new THREE.LineSegments( pGeometry, pMaterial );
+  	scene.add( pLine );
+  }else{
+    var planeGeometry = new THREE.PlaneGeometry(2000, 2000);
+  	var planeMaterial = new THREE.MeshPhongMaterial({
+  		color: 0xdcdcdc,
+  		shininess: 10
+  	});
+  	var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+  	plane.rotation.x = - Math.PI / 2;
+  	plane.receiveShadow = true;
+  	scene.add(plane);
 
-	//GridHelper
-	var grid = new THREE.GridHelper(1000, 20, new THREE.Color( 0xa10000 ), new THREE.Color( 0xf0f0f0 ));
-	scene.add(grid);
+  	//GridHelper
+  	var grid = new THREE.GridHelper(1000, 20, new THREE.Color( 0xa10000 ), new THREE.Color( 0xf0f0f0 ));
+  	scene.add(grid);
+  }
 
 	//Light
 	scene.add( addLight( -1414, 1000, 0 ) );
 	scene.add( addLight( 1000, 1000, 1000 ) );
 	scene.add( addLight( 1000, 1000, -1000 ) );
 
-	renderer = new THREE.WebGLRenderer({ antialias:true });
-
-	renderer.setClearColor( 0xdddddd );
-	renderer.shadowMap.enabled = true;
-	renderer.shadowMapSoft = true;
+  if( webgl_supp ){
+  	renderer = new THREE.WebGLRenderer({ antialias:true });
+  	renderer.shadowMap.enabled = true;
+  	renderer.shadowMapSoft = true;
+  }else{
+    renderer = new THREE.CanvasRenderer({ antialias:true });
+  }
+  renderer.setClearColor( 0xdddddd );
   renderer.setSize( langasId.clientWidth, langasId.clientHeight );
 
 	//Mouse controls
@@ -165,22 +223,27 @@ function viewInit() {
 }
 
 function addLight( pX, pY, pZ ){
-	var spotLight = new THREE.SpotLight( 0xffffff );
-	spotLight.castShadow = true;
-	spotLight.position.set( pX, pY, pZ );
+  if(webgl_supp){
+  	var light = new THREE.SpotLight( 0xffffff );
+  	light.castShadow = true;
+    light.shadow.mapSize.width = 1024;
+    light.shadow.mapSize.height = 1024;
+    light.shadow.camera.near = 1;
+    light.shadow.camera.far = 200;
+    light.intensity = 0.7;
+  }else{
+    var light = new THREE.DirectionalLight( 0xffffff );
+    light.intensity = 0.4;
+  }
 
-	spotLight.angle = 1;
-	spotLight.penumbra = 0.06;
-	spotLight.decay = 1;
-	spotLight.distance = 4000;
-	spotLight.intensity = 0.5;
+  light.position.set( pX, pY, pZ );
 
-	spotLight.shadow.mapSize.width = 1024;
-	spotLight.shadow.mapSize.height = 1024;
-	spotLight.shadow.camera.near = 1;
-	spotLight.shadow.camera.far = 200;
+  light.angle = 1;
+  light.penumbra = 0.06;
+  light.decay = 1;
+  light.distance = 4000;
 
-	return spotLight;
+	return light;
 }
 
 function loadObject(url, metaNr){
@@ -215,7 +278,9 @@ function loadObject(url, metaNr){
 		object.rotation.y = d.rotation.y;
 		object.rotation.z = d.rotation.z;
 
-    object.castShadow = true;
+    if(webgl_supp){
+      object.castShadow = true;
+    }
 
 		scene.add( object );
 
