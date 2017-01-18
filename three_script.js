@@ -2,13 +2,19 @@ var THREE = require('./lib/three');
 var fs = require('fs');
 var DOMParser = require('xmldom').DOMParser;
 var JSZip = require('./lib/jszip.min');
+var window = { DOMParser: true };
 var TextDecoder = true;
 eval(fs.readFileSync("lib/OBJLoader.js")+"");					//Original
 eval(fs.readFileSync("lib/STLLoader.js")+"");					//Original
 eval(fs.readFileSync("lib/3MFLoader.js")+"");					//Custom
 eval(fs.readFileSync("lib/AMFLoader.js")+"");					//Custom
 eval(fs.readFileSync("lib/AWDLoader.js")+"");					//Custom
+eval(fs.readFileSync("lib/ColladaLoader.js")+"");			//Custom
+eval(fs.readFileSync("lib/lzma.js")+"");							//Original
+eval(fs.readFileSync("lib/ctm.js")+"");								//Original
+eval(fs.readFileSync("lib/CTMLoader.js")+"");					//Custom
 eval(fs.readFileSync("lib/PLYLoader.js")+"");					//Original
+eval(fs.readFileSync("lib/VTKLoader.js")+"");					//Original
 eval(fs.readFileSync("lib/Custom_XHRLoader.js")+"");
 
 module.exports = {
@@ -38,6 +44,15 @@ function loadThreejsObject(ext, data, method){
 			var loader = new THREE.AWDLoader();
 			load(loader, data);
 			break;
+		case "dae":
+			var loader = new THREE.ColladaLoader();
+			load_custom("dae", loader, data);
+			break;
+		case "ctm":
+			var loader = new THREE.CTMLoader();
+			custom_CTM_load_function();
+			load_custom("ctm", loader, data);
+			break;
     case "obj":
       var loader = new THREE.OBJLoader();
       load(loader, data);
@@ -50,6 +65,11 @@ function loadThreejsObject(ext, data, method){
       var loader = new THREE.STLLoader();
   		load_geo(loader, data);
   		break;
+		case "vtk":
+		case "vtp":
+			var loader = new THREE.VTKLoader();
+			load_geo(loader, data);
+			break;
   }
 
   function load(loader, data){
@@ -64,6 +84,29 @@ function loadThreejsObject(ext, data, method){
 			group.add(new THREE.Mesh(geometry, null));
 			method(group);
 		});
+	}
+
+	function load_custom(met, loader, data){
+		var group = new THREE.Group();
+		switch(met) {
+			case "dae":
+				loader.load( data, function ( object ) {
+					object.scene.traverse( function ( child ) {
+						if ( child instanceof THREE.Mesh ) {
+							group.add(new THREE.Mesh(child.geometry, null));
+						}
+					});
+					method(group);
+				});
+			break;
+			case "ctm":
+				loader.load( data, function ( geometry ) {
+						group.add(new THREE.Mesh(geometry, null));
+
+					method(group);
+				});
+			break;
+		}
 	}
 }
 
@@ -104,6 +147,7 @@ function getThreeObjectRedy( object ) {
   		},
   		"vertices": singleGeometry.toJSON()["data"]["vertices"],
   		"normals": singleGeometry.toJSON()["data"]["normals"],
+			"colors": singleGeometry.toJSON()["data"]["colors"],
   		"uvs": singleGeometry.toJSON()["data"]["uvs"],
   		"faces": singleGeometry.toJSON()["data"]["faces"]
   	};
@@ -135,6 +179,26 @@ function getThreeObjectRedy( object ) {
 
   	return obj;
   }
+}
+
+function custom_CTM_load_function(){
+	THREE.CTMLoader.prototype.load = function( url, callback, parameters ) {
+		var scope = this;
+		parameters = parameters || {};
+		var offsets = parameters.offsets !== undefined ? parameters.offsets : [ 0 ];
+
+		var fl = new THREE.FileLoader();
+		fl.setResponseType("arraybuffer");
+		fl.load(url, function(response) {
+			var binaryData = new Uint8Array(response);
+			for ( var i = 0; i < offsets.length; i ++ ) {
+				var stream = new CTM.Stream( binaryData );
+				stream.offset = offsets[ i ];
+				var ctmFile = new CTM.File( stream );
+				scope.createModel( ctmFile, callback );
+			}
+		});
+	};
 }
 
 // FIXME: Code location
