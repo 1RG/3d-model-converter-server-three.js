@@ -134,6 +134,9 @@ function getThreeObjectRedy( object ) {
   singleGeometry.mergeVertices();
   console.log("mergeVertices DONE");
 
+	convertFacesFlat(singleGeometry);
+	console.log("convertFacesFlat DONE");
+
   geoArr = {
   		"metadata": {"adjust": {
   				"scale": object.scale.x,
@@ -179,6 +182,18 @@ function getThreeObjectRedy( object ) {
 
   	return obj;
   }
+
+	function convertFacesFlat( geometry ) {
+		for (var i = 0; i < geometry.faces.length; i++) {
+			geometry.faces[i].normal = new THREE.Vector3(0, 0, 0);
+			geometry.faces[i].vertexNormals = [];
+			geometry.faces[i].color = new THREE.Color(1, 1, 1);
+			geometry.faces[i].vertexColors = [];
+			geometry.faces[i].materialIndex = 0;
+
+			geometry.faceVertexUvs[0][i] = undefined;
+		}
+	}
 }
 
 function custom_CTM_load_function(){
