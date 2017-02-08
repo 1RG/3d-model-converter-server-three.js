@@ -5,6 +5,7 @@ var webgl_supp;
 
 var langasId = _( "langas" );
 var objectMetadata = [];
+var view_name = "";
 
 var canvasLibURLArr = [
 	"lib/CanvasRenderer.js",
@@ -75,10 +76,10 @@ function main(){
         var url = URL.createObjectURL(blob);
         objectMetadata.push( JSON.parse( data ).metadata.adjust );
 
-        addTabRow(_("tab"), file.name, data.length, url);
+        addTabRow(_("tab"), file.name, data.length, url, blob);
 
         if(autoView){
-          loadObject(url, objectMetadata.length - 1);
+          loadObject(url, objectMetadata.length - 1, file.name);
         }
      } else if(req.status == 500){
        _("up_info").innerHTML = JSON.parse(res.target.responseText).msg;
@@ -102,7 +103,7 @@ function main(){
 
   buttonControl();
 
-  function addTabRow(table, t_name, t_size, t_blob){
+  function addTabRow(table, t_name, t_size, t_url, t_blob){
     var r = table.insertRow();
 
     var arr = [table.rows.length-1, t_name, size(t_size)];
@@ -112,22 +113,29 @@ function main(){
     }
 
     var link0 = document.createElement("a");
-    link0.appendChild(document.createTextNode(t_blob));
-    link0.setAttribute("href", t_blob);
+    link0.appendChild(document.createTextNode(t_url));
+    link0.setAttribute("href", t_url);
     link0.setAttribute("target", "_blank");
 
     var link1 = document.createElement("a");
     link1.appendChild(document.createTextNode("link"));
-    link1.setAttribute("href", t_blob);
+    link1.setAttribute("href", t_url);
     var i = t_name.lastIndexOf(".");
     link1.setAttribute("download", t_name.substr(0, i)+".json");
+
+		//IE
+		if(typeof window.navigator.msSaveOrOpenBlob != "undefined"){
+			link1.addEventListener("click",function() {
+				window.navigator.msSaveOrOpenBlob( t_blob );
+			});
+		}
 
     var but = document.createElement("button");
     but.appendChild(document.createTextNode("view"));
     var om = objectMetadata.length - 1;
     but.addEventListener("click", function(){
       _("wi_info").innerHTML = (om + 1) + "# loading...";
-      loadObject(t_blob, om);
+      loadObject(t_url, om, t_name);
     });
 
     var c0 = r.insertCell();
@@ -183,7 +191,7 @@ function viewInit() {
   	var pLine = new THREE.LineSegments( pGeometry, pMaterial );
   	scene.add( pLine );
   }else{
-    var planeGeometry = new THREE.PlaneGeometry(2000, 2000);
+		var planeGeometry = new THREE.PlaneGeometry(2000, 2000);
   	var planeMaterial = new THREE.MeshPhongMaterial({
   		color: 0xdcdcdc,
   		shininess: 10
@@ -204,7 +212,10 @@ function viewInit() {
 	scene.add( addLight( 1000, 1000, -1000 ) );
 
   if( webgl_supp ){
-  	renderer = new THREE.WebGLRenderer({ antialias:true });
+  	renderer = new THREE.WebGLRenderer({
+			preserveDrawingBuffer: true, //For canvas dataUrl
+			antialias:true
+		});
   	renderer.shadowMap.enabled = true;
   	renderer.shadowMapSoft = true;
   }else{
@@ -224,8 +235,8 @@ function viewInit() {
 
 function addLight( pX, pY, pZ ){
   if(webgl_supp){
-  	var light = new THREE.SpotLight( 0xffffff );
-  	light.castShadow = true;
+    var light = new THREE.SpotLight( 0xffffff );
+    light.castShadow = true;
     light.shadow.mapSize.width = 1024;
     light.shadow.mapSize.height = 1024;
     light.shadow.camera.near = 1;
@@ -238,24 +249,26 @@ function addLight( pX, pY, pZ ){
 
   light.position.set( pX, pY, pZ );
 
-  light.angle = 1;
-  light.penumbra = 0.06;
-  light.decay = 1;
-  light.distance = 4000;
+	light.angle = 1;
+	light.penumbra = 0.06;
+	light.decay = 1;
+	light.distance = 4000;
 
 	return light;
 }
 
-function loadObject(url, metaNr){
+function loadObject(url, metaNr, o_name){
 	var onProgress = function ( xhr ) {
 		if ( xhr.lengthComputable ) {
 			var percentComplete = xhr.loaded / xhr.total * 100;
-      _("wi_info").innerHTML = (metaNr + 1) + "# " + Math.round(percentComplete, 2) + '% load';
+      _("wi_info").innerHTML = (metaNr + 1) + "# " + Math.round(percentComplete, 2) + "% load";
+			view_name = "";
 		}
 	};
 
 	var onError = function ( xhr ) {
     _("wi_info").innerHTML = (metaNr + 1) + "# 3d view error";
+		view_name = "";
 	};
 
   var d = objectMetadata[metaNr];
@@ -286,6 +299,7 @@ function loadObject(url, metaNr){
 
 		render();
     _("wi_info").innerHTML = (metaNr + 1) + "# done";
+		view_name = o_name;
 	}, onProgress, onError);
 }
 
@@ -294,13 +308,13 @@ function buttonControl() {
     setColor(0xffffff);
   });
   _("col_r").addEventListener("click", function(){
-    setColor(0xff0000);
+    setColor(0xa10000);
   });
   _("col_g").addEventListener("click", function(){
-    setColor(0x00ff00);
+    setColor(0x00a100);
   });
   _("col_b").addEventListener("click", function(){
-    setColor(0x0000ff);
+    setColor(0x0000a1);
   });
   _("col_bl").addEventListener("click", function(){
     setColor(0x000000);
@@ -342,6 +356,58 @@ function buttonControl() {
       elem.requestFullscreen();
     }
   });
+
+	var l = document.createElement('a');
+	if(typeof l.download != "undefined"){
+		var loop2 = setInterval(function(){
+			if(renderer != null){
+				if(renderer.domElement != null){
+					clearInterval(loop2);
+
+					var link = document.createElement('a');
+					link.innerHTML = "Named download link";
+					link.href = renderer.domElement.toDataURL();
+			    link.download = "view.png";
+					link.addEventListener("click", function(){
+						link.href = renderer.domElement.toDataURL();
+				    if(view_name != ""){
+							link.download = view_name + "_view.png";
+						}
+					}, false);
+					document.body.appendChild(link);
+
+				}
+			}
+		}, 30);
+	}
+
+	_("gDImgScreen").addEventListener("click", function(){
+		var image_data = atob(renderer.domElement.toDataURL().split(',')[1]);
+		var arraybuffer = new ArrayBuffer(image_data.length);
+		var view = new Uint8Array(arraybuffer);
+		for (var i=0; i<image_data.length; i++) {
+			view[i] = image_data.charCodeAt(i) & 0xff;
+		}
+		try {
+			var blob = new Blob([arraybuffer], {type: 'application/octet-stream'});
+		} catch (e) {
+		  var bb = new (window.WebKitBlobBuilder || window.MozBlobBuilder);
+		  bb.append(arraybuffer);
+		  var blob = bb.getBlob('application/octet-stream');
+		}
+
+		//IE
+		if(typeof window.navigator.msSaveOrOpenBlob != "undefined"){
+			window.navigator.msSaveOrOpenBlob( blob );
+		}else{
+			var url = URL.createObjectURL(blob);
+			location.href = url; //clears console
+		}
+	});
+
+	_("gVImgScreen").addEventListener("click", function(){
+		window.open(renderer.domElement.toDataURL(), "_blank");
+	});
 
   function setColor(h) {
     if(object != null){
