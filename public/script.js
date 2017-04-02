@@ -357,6 +357,23 @@ function buttonControl() {
     }
   });
 
+	_("dGrid").addEventListener("click", function(){
+		if(scene != null){
+			scene.children[0].visible = !scene.children[0].visible;
+			if(scene.children[0].type == "Mesh"){
+				scene.children[1].visible = !scene.children[1].visible;
+			}
+
+			if(scene.children[0].visible){
+				_("dGrid").innerHTML = "Disable Grid";
+			}else{
+				_("dGrid").innerHTML = "Enable Grid";
+			}
+
+			render();
+		}
+	});
+
 	var l = document.createElement('a');
 	if(typeof l.download != "undefined"){
 		var loop2 = setInterval(function(){
